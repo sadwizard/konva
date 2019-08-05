@@ -17,11 +17,11 @@ import { Factory } from './Factory';
  * var group = new Konva.AbstractGroup();
  */
 export class AbstractGroup extends Container<Node> {
-  // linksChildren?: Array<Node>;
   linksChildren = new Collection<Node>();
 
   constructor(attrs) {
   	super(attrs);
+  	this.visible(false);
   }
 
   _validateAdd(child: Node) {
@@ -78,6 +78,16 @@ export class AbstractGroup extends Container<Node> {
    * @name Konva.AbstractGroup#removeChildren
    */
   removeChildren() {
+  	super.removeChildren();
+
+  	var child;
+  	for (var i = 0; i < this.linksChildren.length; i++) {
+  	  child = this.linksChildren[i];
+  	  // reset parent to prevent many _setChildrenIndices calls
+  	  child.abstractParent = null;
+  	}
+
+  	this.linksChildren = new Collection<Node>();
   	return this;
   }
 

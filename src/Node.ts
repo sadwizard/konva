@@ -1936,9 +1936,7 @@ export abstract class Node<Config extends NodeConfig = NodeConfig> {
     this.height(size.height);
     return this;
   }
-  setOffsetAbstractElements(offset: object) {
-    
-  }
+
   getSize() {
     return {
       width: this.width(),
@@ -2257,10 +2255,6 @@ export abstract class Node<Config extends NodeConfig = NodeConfig> {
       newNodePos = dbf.call(this, newNodePos, evt);
     }
     this.setAbsolutePosition(newNodePos);
-
-    if (this.abstractParent) {
-      this.abstractParent.setOffsetAbstractElements(DD.offset);
-    }
 
     if (
       !this._lastPos ||

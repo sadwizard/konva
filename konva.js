@@ -3996,8 +3996,6 @@
           this.height(size.height);
           return this;
       };
-      Node.prototype.setOffsetAbstractElements = function (offset) {
-      };
       Node.prototype.getSize = function () {
           return {
               width: this.width(),
@@ -4285,9 +4283,6 @@
               newNodePos = dbf.call(this, newNodePos, evt);
           }
           this.setAbsolutePosition(newNodePos);
-          if (this.abstractParent) {
-              this.abstractParent.setOffsetAbstractElements(DD.offset);
-          }
           if (!this._lastPos ||
               this._lastPos.x !== newNodePos.x ||
               this._lastPos.y !== newNodePos.y) {
@@ -8413,8 +8408,8 @@
       __extends(AbstractGroup, _super);
       function AbstractGroup(attrs) {
           var _this = _super.call(this, attrs) || this;
-          // linksChildren?: Array<Node>;
           _this.linksChildren = new Collection();
+          _this.visible(false);
           return _this;
       }
       AbstractGroup.prototype._validateAdd = function (child) {
@@ -8466,6 +8461,14 @@
        * @name Konva.AbstractGroup#removeChildren
        */
       AbstractGroup.prototype.removeChildren = function () {
+          _super.prototype.removeChildren.call(this);
+          var child;
+          for (var i = 0; i < this.linksChildren.length; i++) {
+              child = this.linksChildren[i];
+              // reset parent to prevent many _setChildrenIndices calls
+              child.abstractParent = null;
+          }
+          this.linksChildren = new Collection();
           return this;
       };
       AbstractGroup.prototype.drawScene = function () {
