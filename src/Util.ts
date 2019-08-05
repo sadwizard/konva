@@ -1003,5 +1003,39 @@ export const Util = {
       (<any>target)[key] = source[key];
     }
     return target as T & U;
+  },
+  _decompose2dMatrix(mat) {
+      const a = mat[0];
+      const b = mat[1];
+      const c = mat[2];
+      const d = mat[3];
+      const e = mat[4];
+      const f = mat[5];
+
+      const delta = a * d - b * c;
+
+      let result = {
+          translation: [e, f],
+          rotation: 0,
+          scale: [0, 0],
+          skew: [0, 0],
+      };
+
+      // Apply the QR-like decomposition.
+      if (a != 0 || b != 0) {
+          const r = Math.sqrt(a * a + b * b);
+          result.rotation = b > 0 ? Math.acos(a / r) : -Math.acos(a / r);
+          result.scale = [r, delta / r];
+          result.skew = [Math.atan((a * c + b * d) / (r * r)), 0];
+      } else if (c != 0 || d != 0) {
+          const s = Math.sqrt(c * c + d * d);
+          result.rotation = Math.PI / 2 - (d > 0 ? Math.acos(-c / s) : -Math.acos(c / s));
+          result.scale = [delta / s, s];
+          result.skew = [0, Math.atan((a * c + b * d) / (s * s))];
+      } else {
+      // a = b = c = d = 0
+      }
+
+      return result;
   }
 };

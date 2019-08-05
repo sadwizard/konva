@@ -196,6 +196,7 @@ export abstract class Node<Config extends NodeConfig = NodeConfig> {
   attrs: any = {};
   index = 0;
   parent: Container<Node> | null = null;
+  abstractParent: Container<Node> | null = null;
   _cache: Map<string, any> = new Map<string, any>();
   _lastPos: Point = null;
   _attrsAffectingSize!: string[];
@@ -1009,7 +1010,6 @@ export abstract class Node<Config extends NodeConfig = NodeConfig> {
   _isVisible(relativeTo) {
     var visible = this.visible(),
       parent = this.getParent();
-
     // the following conditions are a simplification of the truth table above.
     // please modify carefully
     if (visible === 'inherit') {
@@ -1648,7 +1648,6 @@ export abstract class Node<Config extends NodeConfig = NodeConfig> {
     // start with stage and traverse downwards to self
     this._eachAncestorReverse(function(node) {
       var transformsEnabled = node.getTransformsEnabled();
-
       if (transformsEnabled === 'all') {
         at.multiply(node.getTransform());
       } else if (transformsEnabled === 'position') {
@@ -1658,8 +1657,10 @@ export abstract class Node<Config extends NodeConfig = NodeConfig> {
         );
       }
     }, top);
+
     return at;
   }
+
   /**
    * get absolute scale of the node which takes into
    *  account its ancestor scales
@@ -1934,6 +1935,9 @@ export abstract class Node<Config extends NodeConfig = NodeConfig> {
     this.width(size.width);
     this.height(size.height);
     return this;
+  }
+  setOffsetAbstractElements(offset: object) {
+    
   }
   getSize() {
     return {
@@ -2228,14 +2232,12 @@ export abstract class Node<Config extends NodeConfig = NodeConfig> {
       if (DD.node) {
         DD.node.stopDrag();
       }
-
       DD.node = this;
       DD.startPointerPos = pos;
       DD.offset.x = pos.x - ap.x;
       DD.offset.y = pos.y - ap.y;
       DD.anim.setLayers(layer || this['getLayers']());
       DD.anim.start();
-
       this._setDragPosition();
     }
   }
@@ -2255,6 +2257,10 @@ export abstract class Node<Config extends NodeConfig = NodeConfig> {
       newNodePos = dbf.call(this, newNodePos, evt);
     }
     this.setAbsolutePosition(newNodePos);
+
+    if (this.abstractParent) {
+      this.abstractParent.setOffsetAbstractElements(DD.offset);
+    }
 
     if (
       !this._lastPos ||
@@ -2322,6 +2328,7 @@ export abstract class Node<Config extends NodeConfig = NodeConfig> {
        */
       var stage = this.getStage();
       var dd = DD;
+
       if (stage && dd.node && dd.node._id === this._id) {
         dd.node.stopDrag();
       }

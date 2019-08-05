@@ -122,6 +122,7 @@ export abstract class Container<ChildType extends Node> extends Node<
       }
       return this;
     }
+
     if (child.getParent()) {
       child.moveTo(this);
       return this;
@@ -346,7 +347,6 @@ export abstract class Container<ChildType extends Node> extends Node<
       context = canvas && canvas.getContext(),
       cachedCanvas = this._getCanvasCache(),
       cachedSceneCanvas = cachedCanvas && cachedCanvas.scene;
-
     if (this.isVisible() || caching) {
       if (!caching && cachedSceneCanvas) {
         context.save();
@@ -463,6 +463,7 @@ export abstract class Container<ChildType extends Node> extends Node<
       height: 0
     };
     var that = this;
+
     this.children.each(function(child) {
       // skip invisible children
       if (!child.visible()) {

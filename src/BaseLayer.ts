@@ -39,6 +39,20 @@ export abstract class BaseLayer extends Container<Group | Shape> {
 
     this.on('imageSmoothingEnabledChange', this._checkSmooth);
     this._checkSmooth();
+
+    this.on('mousedown touchstart', function(e) {
+      var target = e.target;
+      if (target.abstractParent && target.abstractParent.attrs.draggable) {
+        target.abstractParent.startDrag();
+      }
+    });
+
+    this.on('mouseup touchend', function(e) {
+      var target = e.target;
+      if (target.abstractParent) {
+        target.abstractParent.stopDrag();
+      }
+    });
   }
   // for nodejs?
   createPNGStream() {

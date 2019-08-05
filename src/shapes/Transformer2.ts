@@ -31,7 +31,7 @@ export interface TransformerConfig extends ContainerConfig {
   keepRatio?: boolean;
   centeredScaling?: boolean;
   enabledAnchors?: Array<string>;
-  node?: Rect;
+  nodes?: Array<Rect>;
   boundBoxFunc?: (oldBox: Box, newBox: Box) => Box;
 }
 
@@ -173,7 +173,7 @@ var MAX_SAFE_INTEGER = 100000000;
  */
 
 export class Transformer extends Group {
-  _node: Node;
+  _nodes: Array<Node>;
   movingResizer: string;
   _transforming = false;
   sin: number;
@@ -187,13 +187,13 @@ export class Transformer extends Group {
 
     // bindings
     this._handleMouseMove = this._handleMouseMove.bind(this);
-    this._handleMouseUp = this._handleMouseUp.bind(this);
+    // this._handleMouseUp = this._handleMouseUp.bind(this);
     this.update = this.update.bind(this);
 
     // update transformer data for certain attr changes
-    this.on(ATTR_CHANGE_LIST, this.update);
+    // this.on(ATTR_CHANGE_LIST, this.update);
 
-    if (this.getNode()) {
+    if (this.getNodes()) {
       this.update();
     }
   }
@@ -205,40 +205,40 @@ export class Transformer extends Group {
    * @example
    * transformer.attachTo(shape);
    */
-  attachTo(node) {
-    this.setNode(node);
-    return this;
-  }
-  setNode(node) {
-    if (this._node) {
-      this.detach();
-    }
-    this._node = node;
-    this._resetTransformCache();
+  // attachTo(node) {
+  //   this.setNode(node);
+  //   return this;
+  // }
+  setNodes(nodes) {
+    // if (this._node) {
+    //   this.detach();
+    // }
+    this._nodes = nodes;
+    // this._resetTransformCache();
 
-    const additionalEvents = node._attrsAffectingSize
-      .map(prop => prop + 'Change.tr')
-      .join(' ');
+    // const additionalEvents = node._attrsAffectingSize
+    //   .map(prop => prop + 'Change.tr')
+    //   .join(' ');
 
-    const onChange = () => {
-      this._resetTransformCache();
-      if (!this._transforming) {
-        this.update();
-      }
-    };
-    node.on(additionalEvents, onChange);
-    node.on(TRANSFORM_CHANGE_STR, onChange);
-    node.on('xChange.tr yChange.tr', () => this._resetTransformCache());
-    // we may need it if we set node in initial props
-    // so elements are not defined yet
+    // const onChange = () => {
+    //   this._resetTransformCache();
+    //   if (!this._transforming) {
+    //     this.update();
+    //   }
+    // };
+    // node.on(additionalEvents, onChange);
+    // node.on(TRANSFORM_CHANGE_STR, onChange);
+    // node.on('xChange.tr yChange.tr', () => this._resetTransformCache());
+    // // we may need it if we set node in initial props
+    // // so elements are not defined yet
     var elementsCreated = !!this.findOne('.top-left');
     if (elementsCreated) {
       this.update();
     }
     return this;
   }
-  getNode() {
-    return this._node;
+  getNodes() {
+    return this._nodes;
   }
   /**
    * detach transformer from an attached node
@@ -248,70 +248,70 @@ export class Transformer extends Group {
    * @example
    * transformer.detach();
    */
-  detach() {
-    if (this.getNode()) {
-      this.getNode().off('.tr');
-      this._node = undefined;
-    }
-    this._resetTransformCache();
-  }
-  _resetTransformCache() {
-    this._clearCache(NODE_RECT);
-    this._clearCache('transform');
-    this._clearSelfAndDescendantCache('absoluteTransform');
-  }
-  _getNodeRect() {
-    return this._getCache(NODE_RECT, this.__getNodeRect);
-  }
-  __getNodeRect() {
-    var node = this.getNode();
-    if (!node) {
-      return {
-        x: -MAX_SAFE_INTEGER,
-        y: -MAX_SAFE_INTEGER,
-        width: 0,
-        height: 0,
-        rotation: 0
-      };
-    }
+  // detach() {
+  //   if (this.getNode()) {
+  //     this.getNode().off('.tr');
+  //     this._node = undefined;
+  //   }
+  //   this._resetTransformCache();
+  // }
+  // _resetTransformCache() {
+  //   this._clearCache(NODE_RECT);
+  //   this._clearCache('transform');
+  //   this._clearSelfAndDescendantCache('absoluteTransform');
+  // }
+  // _getNodesRect() {
+  //   return ;
+  // }
+  // __getNodeRect() {
+  //   var node = this.getNode();
+  //   if (!node) {
+  //     return {
+  //       x: -MAX_SAFE_INTEGER,
+  //       y: -MAX_SAFE_INTEGER,
+  //       width: 0,
+  //       height: 0,
+  //       rotation: 0
+  //     };
+  //   }
 
-    if (node.parent && this.parent && node.parent !== this.parent) {
-      Util.warn(
-        'Transformer and attached node have different parents. Konva does not support such case right now. Please move Transformer to the parent of attaching node.'
-      );
-    }
-    var rect = node.getClientRect({
-      skipTransform: true,
-      skipShadow: true,
-      skipStroke: this.ignoreStroke()
-    });
-    var rotation = Konva.getAngle(node.rotation());
+  //   if (node.parent && this.parent && node.parent !== this.parent) {
+  //     Util.warn(
+  //       'Transformer and attached node have different parents. Konva does not support such case right now. Please move Transformer to the parent of attaching node.'
+  //     );
+  //   }
+  //   var rect = node.getClientRect({
+  //     skipTransform: true,
+  //     skipShadow: true,
+  //     skipStroke: this.ignoreStroke()
+  //   });
+  //   var rotation = Konva.getAngle(node.rotation());
 
-    var dx = rect.x * node.scaleX() - node.offsetX() * node.scaleX();
-    var dy = rect.y * node.scaleY() - node.offsetY() * node.scaleY();
+  //   var dx = rect.x * node.scaleX() - node.offsetX() * node.scaleX();
+  //   var dy = rect.y * node.scaleY() - node.offsetY() * node.scaleY();
 
-    return {
-      x: node.x() + dx * Math.cos(rotation) + dy * Math.sin(-rotation),
-      y: node.y() + dy * Math.cos(rotation) + dx * Math.sin(rotation),
-      width: rect.width * node.scaleX(),
-      height: rect.height * node.scaleY(),
-      rotation: node.rotation()
-    };
-  }
+  //   return {
+  //     x: node.x() + dx * Math.cos(rotation) + dy * Math.sin(-rotation),
+  //     y: node.y() + dy * Math.cos(rotation) + dx * Math.sin(rotation),
+  //     width: rect.width * node.scaleX(),
+  //     height: rect.height * node.scaleY(),
+  //     rotation: node.rotation()
+  //   };
+  // }
   getX() {
-    return this._getNodeRect().x;
+    return this._getNodesRect().x;
   }
   getY() {
-    return this._getNodeRect().y;
+    return this._getNodesRect().y;
   }
-  getRotation() {
-    return this._getNodeRect().rotation;
-  }
+  // getRotation() {
+  //   return this._getNodesRect().rotation;
+  // }
   getWidth() {
-    return this._getNodeRect().width;
+    return this._getNodesRect().width;
   }
   getHeight() {
-    return this._getNodeRect().height;
+    return this._getNodesRect().height;
   }
   _createElements() {
     this._createBack();
@@ -348,23 +348,23 @@ export class Transformer extends Group {
     });
 
     // add hover styling
-    anchor.on('mouseenter', () => {
-      var rad = Konva.getAngle(this.rotation());
+    // anchor.on('mouseenter', () => {
+    //   var rad = Konva.getAngle(this.rotation());
 
-      var scale = this.getNode().getAbsoluteScale();
-      // If scale.y < 0 xor scale.x < 0 we need to flip (not rotate).
-      var isMirrored = scale.y * scale.x < 0;
-      var cursor = getCursor(name, rad, isMirrored);
-      anchor.getStage().content.style.cursor = cursor;
-      this._cursorChange = true;
-    });
-    anchor.on('mouseout', () => {
-      if (!anchor.getStage() || !anchor.getParent()) {
-        return;
-      }
-      anchor.getStage().content.style.cursor = '';
-      this._cursorChange = false;
-    });
+    //   var scale = this.getNode().getAbsoluteScale();
+    //   // If scale.y < 0 xor scale.x < 0 we need to flip (not rotate).
+    //   var isMirrored = scale.y * scale.x < 0;
+    //   var cursor = getCursor(name, rad, isMirrored);
+    //   anchor.getStage().content.style.cursor = cursor;
+    //   this._cursorChange = true;
+    // });
+    // anchor.on('mouseout', () => {
+    //   if (!anchor.getStage() || !anchor.getParent()) {
+    //     return;
+    //   }
+    //   anchor.getStage().content.style.cursor = '';
+    //   this._cursorChange = false;
+    // });
     this.add(anchor);
   }
   _createBack() {
@@ -396,11 +396,92 @@ export class Transformer extends Group {
     });
     this.add(back);
   }
+
+  _getNodesRect(attrs?): IRect {
+    attrs = attrs || {};
+    var skipTransform = attrs.skipTransform;
+    var relativeTo = attrs.relativeTo;
+
+    var minX, minY, maxX, maxY;
+    var selfRect = {
+      x: Infinity,
+      y: Infinity,
+      width: 0,
+      height: 0
+    };
+    var that = this;
+    if (!this._nodes) {
+      return;
+    }
+
+    this.getNodes().forEach(function(child) {
+      // skip invisible children
+      if (!child.visible()) {
+        return;
+      }
+
+      var rect = child.getClientRect({
+        relativeTo: that,
+        skipShadow: attrs.skipShadow,
+        skipStroke: attrs.skipStroke
+      });
+
+      // skip invisible children (like empty groups)
+      if (rect.width === 0 && rect.height === 0) {
+        return;
+      }
+
+      if (minX === undefined) {
+        // initial value for first child
+        minX = rect.x;
+        minY = rect.y;
+        maxX = rect.x + rect.width;
+        maxY = rect.y + rect.height;
+      } else {
+        minX = Math.min(minX, rect.x);
+        minY = Math.min(minY, rect.y);
+        maxX = Math.max(maxX, rect.x + rect.width);
+        maxY = Math.max(maxY, rect.y + rect.height);
+      }
+    });
+
+    // if child is group we need to make sure it has visible shapes inside
+    var shapes = this.find('Shape');
+    var hasVisible = false;
+    for (var i = 0; i < shapes.length; i++) {
+      var shape = shapes[i];
+      if (shape._isVisible(this)) {
+        hasVisible = true;
+        break;
+      }
+    }
+
+    if (hasVisible) {
+      selfRect = {
+        x: minX,
+        y: minY,
+        width: maxX - minX,
+        height: maxY - minY
+      };
+    } else {
+      selfRect = {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0
+      };
+    }
+
+    // if (!skipTransform) {
+    //   return this._transformedRect(selfRect, relativeTo);
+    // }
+    return selfRect;
+  }
   _handleMouseDown(e) {
     this.movingResizer = e.target.name().split(' ')[0];
 
-    // var node = this.getNode();
-    var attrs = this._getNodeRect();
+    // var node = this.getNodes();
+    var attrs = this._getNodesRect({});
     var width = attrs.width;
     var height = attrs.height;
     var hypotenuse = Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2));
@@ -409,19 +490,19 @@ export class Transformer extends Group {
 
     window.addEventListener('mousemove', this._handleMouseMove);
     window.addEventListener('touchmove', this._handleMouseMove);
-    window.addEventListener('mouseup', this._handleMouseUp, true);
-    window.addEventListener('touchend', this._handleMouseUp, true);
+    // window.addEventListener('mouseup', this._handleMouseUp, true);
+    // window.addEventListener('touchend', this._handleMouseUp, true);
 
     this._transforming = true;
 
     this._fire('transformstart', { evt: e });
-    this.getNode()._fire('transformstart', { evt: e });
+    // this.getNode()._fire('transformstart', { evt: e });
   }
   _handleMouseMove(e) {
     var x, y, newHypotenuse;
     var resizerNode = this.findOne('.' + this.movingResizer);
     var stage = resizerNode.getStage();
-    // console.log(this._getNodeRect())
+
     var box = stage.getContent().getBoundingClientRect();
     var zeroPoint = {
       x: box.left,
@@ -533,7 +614,7 @@ export class Transformer extends Group {
       }
     } else if (this.movingResizer === 'rotater') {
       var padding = this.padding();
-      var attrs = this._getNodeRect();
+      var attrs = this._getNodesRect({});
       x = resizerNode.x() - attrs.width / 2;
       y = -resizerNode.y() + attrs.height / 2;
 
@@ -547,7 +628,7 @@ export class Transformer extends Group {
 
       var newRotation = Util._radToDeg(rot) + Util._radToDeg(dAlpha);
 
-      var alpha = Konva.getAngle(this.getNode().rotation());
+      var alpha = 0;//Konva.getAngle(this.getNode().rotation());
       var newAlpha = Util._degToRad(newRotation);
 
       var snaps = this.rotationSnaps();
@@ -649,80 +730,84 @@ export class Transformer extends Group {
       e
     );
   }
-  _handleMouseUp(e) {
-    this._removeEvents(e);
-  }
-  _removeEvents(e?) {
-    if (this._transforming) {
-      this._transforming = false;
-      window.removeEventListener('mousemove', this._handleMouseMove);
-      window.removeEventListener('touchmove', this._handleMouseMove);
-      window.removeEventListener('mouseup', this._handleMouseUp, true);
-      window.removeEventListener('touchend', this._handleMouseUp, true);
-      this._fire('transformend', { evt: e });
-      var node = this.getNode();
-      if (node) {
-        node.fire('transformend', { evt: e });
-      }
-    }
-  }
+  // _handleMouseUp(e) {
+  //   this._removeEvents(e);
+  // }
+  // _removeEvents(e?) {
+  //   if (this._transforming) {
+  //     this._transforming = false;
+  //     window.removeEventListener('mousemove', this._handleMouseMove);
+  //     window.removeEventListener('touchmove', this._handleMouseMove);
+  //     window.removeEventListener('mouseup', this._handleMouseUp, true);
+  //     window.removeEventListener('touchend', this._handleMouseUp, true);
+  //     this._fire('transformend', { evt: e });
+  //     var node = this.getNode();
+  //     if (node) {
+  //       node.fire('transformend', { evt: e });
+  //     }
+  //   }
+  // }
   _fitNodeInto(newAttrs, evt) {
-    // waring! in this attrs padding may be included
-    var boundBoxFunc = this.boundBoxFunc();
-    // console.log(this._getNodeRect())
-    if (boundBoxFunc) {
-      var oldAttrs = this._getNodeRect();
-      newAttrs = boundBoxFunc.call(this, oldAttrs, newAttrs);
-    }
-    var node = this.getNode();
     if (newAttrs.rotation !== undefined) {
-      this.getNode().rotation(newAttrs.rotation);
+      this.findOne('.back').rotation(newAttrs.rotation);
     }
 
-    var pure = node.getClientRect({
-      skipTransform: true,
-      skipShadow: true,
-      skipStroke: this.ignoreStroke()
-    });
-    var padding = this.padding();
-    var scaleX = (newAttrs.width - padding * 2) / pure.width;
-    var scaleY = (newAttrs.height - padding * 2) / pure.height;
+    this.findOne('.back').x(newAttrs.x);
+    this.findOne('.back').y(newAttrs.y);
+    // waring! in this attrs padding may be included
+    // var boundBoxFunc = this.boundBoxFunc();
+    // if (boundBoxFunc) {
+    //   var oldAttrs = this._getNodesRect();
+    //   newAttrs = boundBoxFunc.call(this, oldAttrs, newAttrs);
+    // }
+    // var node = this.getNodes();
+    // if (newAttrs.rotation !== undefined) {
+    //   this.getNode().rotation(newAttrs.rotation);
+    // }
+    // var pure = node.getClientRect({
+    //   skipTransform: true,
+    //   skipShadow: true,
+    //   skipStroke: this.ignoreStroke()
+    // });
 
-    var rotation = Konva.getAngle(node.rotation());
-    var dx = pure.x * scaleX - padding - node.offsetX() * scaleX;
-    var dy = pure.y * scaleY - padding - node.offsetY() * scaleY;
+    // var padding = this.padding();
+    // var scaleX = (newAttrs.width - padding * 2) / pure.width;
+    // var scaleY = (newAttrs.height - paddin876 * 2) / pure.height;
 
-    this.getNode().setAttrs({
-      scaleX: scaleX,
-      scaleY: scaleY,
-      x: newAttrs.x - (dx * Math.cos(rotation) + dy * Math.sin(-rotation)),
-      y: newAttrs.y - (dy * Math.cos(rotation) + dx * Math.sin(rotation))
-    });
+    // var rotation = Konva.getAngle(node.rotation());
+    // var dx = pure.x * scaleX - padding - node.offsetX() * scaleX;
+    // var dy = pure.y * scaleY - padding - node.offsetY() * scaleY;
 
-    this._fire('transform', { evt: evt });
-    this.getNode()._fire('transform', { evt: evt });
+    // this.getNode().setAttrs({
+    //   scaleX: scaleX,
+    //   scaleY: scaleY,
+    //   x: newAttrs.x - (dx * Math.cos(rotation) + dy * Math.sin(-rotation)),
+    //   y: newAttrs.y - (dy * Math.cos(rotation) + dx * Math.sin(rotation))
+    // });
 
-    this.update();
-    this.getLayer().batchDraw();
+    // this._fire('transform', { evt: evt });
+    // this.getNode()._fire('transform', { evt: evt });
+    // this.update();
+    // this.getLayer().batchDraw();
   }
-  /**
-   * force update of Konva.Transformer.
-   * Use it when you updated attached Konva.Group and now you need to reset transformer size
-   * @method
-   * @name Konva.Transformer#forceUpdate
-   */
-  forceUpdate() {
-    this._resetTransformCache();
-    this.update();
-  }
+  // /**
+  //  * force update of Konva.Transformer.
+  //  * Use it when you updated attached Konva.Group and now you need to reset transformer size
+  //  * @method
+  //  * @name Konva.Transformer#forceUpdate
+  //  */
+  // forceUpdate() {
+  //   this._resetTransformCache();
+  //   this.update();
+  // }
   update() {
-    var attrs = this._getNodeRect();
-    var node = this.getNode();
+    var attrs = this._getNodesRect({});
+    // var node = this.getNodes();
 
     var scale = { x: 1, y: 1 };
-    if (node && node.getParent()) {
-      scale = node.getParent().getAbsoluteScale();
-    }
+    // if (node && node.getParent()) {
+    //   scale = node.getParent().getAbsoluteScale();
+    // }
     var invertedScale = {
       x: 1 / scale.x,
       y: 1 / scale.y
@@ -822,38 +907,38 @@ export class Transformer extends Group {
    * @name Konva.Transformer#isTransforming
    * @returns {Boolean}
    */
-  isTransforming() {
-    return this._transforming;
-  }
-  /**
-   * Stop active transform action
-   * @method
-   * @name Konva.Transformer#stopTransform
-   * @returns {Boolean}
-   */
-  stopTransform() {
-    if (this._transforming) {
-      this._removeEvents();
-      var resizerNode = this.findOne('.' + this.movingResizer);
-      if (resizerNode) {
-        resizerNode.stopDrag();
-      }
-    }
-  }
-  destroy() {
-    if (this.getStage() && this._cursorChange) {
-      this.getStage().content.style.cursor = '';
-    }
-    Group.prototype.destroy.call(this);
-    this.detach();
-    this._removeEvents();
-    return this;
-  }
-  // do not work as a container
-  // we will recreate inner nodes manually
-  toObject() {
-    return Node.prototype.toObject.call(this);
-  }
+  // isTransforming() {
+  //   return this._transforming;
+  // }
+  // /**
+  //  * Stop active transform action
+  //  * @method
+  //  * @name Konva.Transformer#stopTransform
+  //  * @returns {Boolean}
+  //  */
+  // stopTransform() {
+  //   if (this._transforming) {
+  //     this._removeEvents();
+  //     var resizerNode = this.findOne('.' + this.movingResizer);
+  //     if (resizerNode) {
+  //       resizerNode.stopDrag();
+  //     }
+  //   }
+  // }
+  // destroy() {
+  //   if (this.getStage() && this._cursorChange) {
+  //     this.getStage().content.style.cursor = '';
+  //   }
+  //   Group.prototype.destroy.call(this);
+  //   this.detach();
+  //   this._removeEvents();
+  //   return this;
+  // }
+  // // do not work as a container
+  // // we will recreate inner nodes manually
+  // toObject() {
+  //   return Node.prototype.toObject.call(this);
+  // }
 
   enabledAnchors: GetSet<string[], this>;
   rotationSnaps: GetSet<number[], this>;
@@ -1206,7 +1291,7 @@ Factory.addGetterSetter(Transformer, 'padding', 0, getNumberValidator());
  * transformer.node(shape);
  */
 
-Factory.addGetterSetter(Transformer, 'node');
+Factory.addGetterSetter(Transformer, 'nodes');
 
 /**
  * get/set bounding box function

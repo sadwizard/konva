@@ -57,7 +57,7 @@ export class Layer extends BaseLayer {
   }
   _validateAdd(child) {
     var type = child.getType();
-    if (type !== 'Group' && type !== 'Shape') {
+    if (type !== 'Group' && type !== 'Shape' && type !== 'AbstractGroup') {
       Util.throw('You may only add groups and shapes to a layer.');
     }
   }

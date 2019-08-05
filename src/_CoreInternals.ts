@@ -11,6 +11,7 @@ import { Layer } from './Layer';
 import { FastLayer } from './FastLayer';
 
 import { Group } from './Group';
+import { AbstractGroup } from './AbstractGroup';
 
 import { DD } from './DragAndDrop';
 
@@ -34,6 +35,7 @@ export const Konva = Util._assign(Global, {
   Layer,
   FastLayer,
   Group,
+  AbstractGroup,
   DD,
   Shape,
   shapes,

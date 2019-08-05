@@ -503,7 +503,6 @@ export class Shape<Config extends ShapeConfig = ShapeConfig> extends Node<
       stage,
       bufferCanvas,
       bufferContext;
-
     if (!this.isVisible() && !caching) {
       return this;
     }

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>transformer</title>
+	<script type="text/javascript" src="../konva.js"></script>
+
+	<style type="text/css">
+		body {
+			overflow: hidden;
+		}
+	</style>
+</head>
+<body>
+<div id="container"></div>
+<script type="text/javascript">
+	var stage = new Konva.Stage({
+	    container: 'container',
+	    width: window.innerWidth,
+	    height: window.innerHeight,
+	});
+
+	var layer = new Konva.Layer();
+
+	var circle = new Konva.Rect({
+        x: 400,
+        y: 400,
+        width: 200,
+        height: 150,
+        fill: '#651111',
+        draggable: false,
+    });
+
+    var circle2 = new Konva.Rect({
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 150,
+        fill: '#444888',
+        draggable: false,
+        name: 'sldkjf sdlkjf '
+    });
+
+	var circle3 = new Konva.Rect({
+        x: 450,
+        y: 450,
+        width: 200,
+        height: 150,
+        fill: '#949',
+        draggable: false,
+    });
+
+    var g = new Konva.AbstractGroup({ draggable: true });
+    g.add(circle, circle2);
+
+    var tr = new Konva.Transformer({
+    	node: g
+    });
+
+    layer.add(circle, circle3, circle2);
+    layer.add(tr);
+    layer.add(g);
+    stage.add(layer);
+</script>
+</body>
+</html>
