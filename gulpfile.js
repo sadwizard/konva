@@ -61,6 +61,7 @@ var sourceFiles = [
   'src/Layer.js',
   'src/FastLayer.js',
   'src/Group.js',
+  'src/AbstractGroup.js',
   'src/Animation.js',
   'src/Tween.js',
   'src/DragAndDrop.js',

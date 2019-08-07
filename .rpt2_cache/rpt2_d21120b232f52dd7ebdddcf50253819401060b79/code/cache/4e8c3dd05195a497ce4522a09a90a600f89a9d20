@@ -1,0 +1,1 @@
+{"code":"// main entry for umd build for rollup\r\nimport { Konva } from './_FullInternals';\r\nexport default Konva;\r\n"}

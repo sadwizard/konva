@@ -12,3 +12,4 @@ require('./BaseLayer.js');
 require('./Layer.js');
 require('./FastLayer.js');
 require('./Group.js');
+require('./AbstractGroup.js');

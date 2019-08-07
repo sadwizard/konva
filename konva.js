@@ -2,7 +2,7 @@
  * Konva JavaScript Framework v2.0.0
  * http://konvajs.github.io/
  * Licensed under the MIT
- * Date: Thu Mar 15 2018
+ * Date: Wed Aug 07 2019
  *
  * Original work Copyright (C) 2011 - 2013 by Eric Rowell (KineticJS)
  * Modified work Copyright (C) 2014 - present by Anton Lavrenov (Konva)
@@ -1234,6 +1234,40 @@
       delete obj.visitedByCircularReferenceRemoval;
 
       return obj;
+    },
+    _decompose2dMatrix: function(mat) {
+      var a = mat[0];
+      var b = mat[1];
+      var c = mat[2];
+      var d = mat[3];
+      var e = mat[4];
+      var f = mat[5];
+
+      var delta = a * d - b * c;
+
+      var result = {
+          translation: [e, f],
+          rotation: 0,
+          scale: [0, 0],
+          skew: [0, 0]
+      };
+
+      // Apply the QR-like decomposition.
+      if (a != 0 || b != 0) {
+          var r = Math.sqrt(a * a + b * b);
+          result.rotation = b > 0 ? Math.acos(a / r) : -Math.acos(a / r);
+          result.scale = [r, delta / r];
+          result.skew = [Math.atan((a * c + b * d) / (r * r)), 0];
+      } else if (c != 0 || d != 0) {
+          var s = Math.sqrt(c * c + d * d);
+          result.rotation = Math.PI / 2 - (d > 0 ? Math.acos(-c / s) : -Math.acos(c / s));
+          result.scale = [delta / s, s];
+          result.skew = [0, Math.atan((a * c + b * d) / (s * s))];
+      } else {
+      // a = b = c = d = 0
+      }
+
+      return result;
     }
   };
 })();
@@ -10892,6 +10926,20 @@
     ___init: function(config) {
       this.nodeType = 'Layer';
       Konva.Container.call(this, config);
+
+      this.on('mousedown touchstart', function(e) {
+        var target = e.target;
+        if (target.abstractParent && target.abstractParent.attrs.draggable) {
+          target.abstractParent.startDrag();
+        }
+      });
+
+      this.on('mouseup touchend', function(e) {
+        var target = e.target;
+        if (target.abstractParent) {
+          target.abstractParent.stopDrag();
+        }
+      });
     },
     createPNGStream: function() {
       return this.canvas._canvas.createPNGStream();
@@ -11204,7 +11252,7 @@
     },
     _validateAdd: function(child) {
       var type = child.getType();
-      if (type !== 'Group' && type !== 'Shape') {
+      if (type !== 'Group' && type !== 'Shape' && type !== 'AbstractGroup') {
         Konva.Util.throw('You may only add groups and shapes to a layer.');
       }
     },
@@ -11562,6 +11610,136 @@
   Konva.Collection.mapMethods(Konva.Group);
 })();
 
+(function(Konva) {
+  'use strict';
+  /**
+     * AbstractGroup constructor.  AbstractGroup are used to contain shapes or other groups and doesn't draw them.
+     * @constructor
+     * @memberof Konva
+     * @augments Konva.Container
+     * @param {Object} config
+     * @param {Number} [config.x]
+     * @param {Number} [config.y]
+     * @param {Number} [config.width]
+     * @param {Number} [config.height]
+     * @param {Boolean} [config.visible]
+     * @param {Boolean} [config.listening] whether or not the node is listening for events
+     * @param {String} [config.id] unique id
+     * @param {String} [config.name] non-unique name
+     * @param {Number} [config.opacity] determines node opacity.  Can be any number between 0 and 1
+     * @param {Object} [config.scale] set scale
+     * @param {Number} [config.scaleX] set scale x
+     * @param {Number} [config.scaleY] set scale y
+     * @param {Number} [config.rotation] rotation in degrees
+     * @param {Object} [config.offset] offset from center point and rotation point
+     * @param {Number} [config.offsetX] set offset x
+     * @param {Number} [config.offsetY] set offset y
+     * @param {Boolean} [config.draggable] makes the node draggable.  When stages are draggable, you can drag and drop
+     *  the entire stage by dragging any portion of the stage
+     * @param {Number} [config.dragDistance]
+     * @param {Function} [config.dragBoundFunc]
+     * * @param {Object} [config.clip] set clip
+     * @param {Number} [config.clipX] set clip x
+     * @param {Number} [config.clipY] set clip y
+     * @param {Number} [config.clipWidth] set clip width
+     * @param {Number} [config.clipHeight] set clip height
+     * @param {Function} [config.clipFunc] set clip func
+
+     */
+  Konva.AbstractGroup = function(config) {
+    this.___init(config);
+  };
+
+  Konva.Util.addMethods(Konva.AbstractGroup, {
+    ___init: function(config) {
+      this.linksChildren = new Konva.Collection();
+      this.nodeType = 'AbstractGroup';
+      Konva.Container.call(this, config);
+      this.opacity(0);
+    },
+    _validateAdd: function(child) {
+      var type = child.getType();
+      if (type !== 'Group' && type !== 'Shape') {
+        Konva.Util.throw('You may only add groups and shapes to groups.');
+      }
+    },
+    add: function(child) {
+      if (arguments.length > 1) {
+        for (var i = 0; i < arguments.length; i++) {
+          this.add(arguments[i]);
+        }
+        return this;
+      }
+      var ch = child.clone();
+
+      if (ch.getParent()) {
+        ch.moveTo(this);
+        return this;
+      }
+
+      var children = this.children;
+      this._validateAdd(ch);
+      ch.index = children.length;
+      ch.parent = this;
+      child.abstractParent = this;
+      children.push(ch);
+      this.linksChildren.push(child);
+      this._fire('add', {
+        child: ch
+      });
+
+      // chainable
+      return this;
+    },
+    /**
+     * remove all children and links
+     * @method
+     * @name Konva.AbstractGroup#removeChildren
+     */
+    removeChildren: function() {
+      Konva.Container.prototype.removeChildren.call(this);
+
+      var child;
+      for (var i = 0; i < this.linksChildren.length; i++) {
+        child = this.linksChildren[i];
+        // reset parent to prevent many _setChildrenIndices calls
+        child.abstractParent = null;
+      }
+
+      this.linksChildren = new Konva.Collection();
+      return this;
+    },
+    drawScene: function() {
+      var self = this;
+      this.children.each(function(item, i) {
+        var at = item.getAbsoluteTransform().copy();
+        var dec = Konva.Util._decompose2dMatrix(at.m);
+        var r = dec.rotation * 180 / Math.PI;
+        var c = self.linksChildren[i];
+
+        c.x(dec.translation[0]);
+        c.y(dec.translation[1]);
+        c.width(item.width() * dec.scale[0]);
+        c.height(item.height() * dec.scale[1]);
+        c.rotation(r);
+      });
+
+      return this;
+    },
+    drawHit: function() {
+      return this;
+    },
+    update: function() {
+      return this;
+    }
+  });
+  Konva.Util.extend(Konva.AbstractGroup, Konva.Container);
+
+  // add getters and setters
+  // Konva.Factory.addGetterSetter(Konva.AbstractGroup, 'visible', false);
+
+  Konva.Collection.mapMethods(Konva.AbstractGroup);
+})(Konva);
 (function(Konva) {
   'use strict';
   var now = (function() {

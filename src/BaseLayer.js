@@ -19,6 +19,20 @@
     ___init: function(config) {
       this.nodeType = 'Layer';
       Konva.Container.call(this, config);
+
+      this.on('mousedown touchstart', function(e) {
+        var target = e.target;
+        if (target.abstractParent && target.abstractParent.attrs.draggable) {
+          target.abstractParent.startDrag();
+        }
+      });
+
+      this.on('mouseup touchend', function(e) {
+        var target = e.target;
+        if (target.abstractParent) {
+          target.abstractParent.stopDrag();
+        }
+      });
     },
     createPNGStream: function() {
       return this.canvas._canvas.createPNGStream();
