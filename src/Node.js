@@ -610,9 +610,15 @@
 
       if (parent && parent.children) {
         parent.children.splice(this.index, 1);
+        if (parent.getType() === 'AbstractGroup') {
+          this.abstractParent = null;
+          parent.linksChildren.splice(this.index, 1);
+        }
         parent._setChildrenIndices();
         delete this.parent;
       }
+
+
 
       // every cached attr that is calculated via node tree
       // traversal must be cleared when removing a node

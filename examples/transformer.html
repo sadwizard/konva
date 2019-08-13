@@ -18,12 +18,12 @@
 	    width: window.innerWidth,
 	    height: window.innerHeight,
 	});
-
+    var d = {x: 400, y: 400}
 	var layer = new Konva.Layer();
 
 	var circle = new Konva.Rect({
-        x: 400,
-        y: 400,
+        x: d.x,
+        y: d.y,
         width: 200,
         height: 150,
         fill: '#651111',
@@ -55,7 +55,9 @@
     var tr = new Konva.Transformer({
     	node: g
     });
-
+    stage.on('click', function(e) {
+        console.log(e)
+    })
     layer.add(circle, circle3, circle2);
     layer.add(tr);
     layer.add(g);

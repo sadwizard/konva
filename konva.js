@@ -2,7 +2,7 @@
  * Konva JavaScript Framework v2.0.0
  * http://konvajs.github.io/
  * Licensed under the MIT
- * Date: Wed Aug 07 2019
+ * Date: Tue Aug 13 2019
  *
  * Original work Copyright (C) 2011 - 2013 by Eric Rowell (KineticJS)
  * Modified work Copyright (C) 2014 - present by Anton Lavrenov (Konva)
@@ -2999,9 +2999,15 @@
 
       if (parent && parent.children) {
         parent.children.splice(this.index, 1);
+        if (parent.getType() === 'AbstractGroup') {
+          this.abstractParent = null;
+          parent.linksChildren.splice(this.index, 1);
+        }
         parent._setChildrenIndices();
         delete this.parent;
       }
+
+
 
       // every cached attr that is calculated via node tree
       // traversal must be cleared when removing a node
@@ -7737,6 +7743,12 @@
       }
       children = null;
       this.children = new Konva.Collection();
+
+      if (this.abstractParent) {
+        this.abstractParent.removeChildren();
+        this.abstractParent = null;
+      }
+
       return this;
     },
     /**

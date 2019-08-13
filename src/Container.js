@@ -92,6 +92,12 @@
       }
       children = null;
       this.children = new Konva.Collection();
+
+      if (this.abstractParent) {
+        this.abstractParent.removeChildren();
+        this.abstractParent = null;
+      }
+
       return this;
     },
     /**
