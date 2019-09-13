@@ -2,7 +2,7 @@
  * Konva JavaScript Framework v2.0.0
  * http://konvajs.github.io/
  * Licensed under the MIT
- * Date: Tue Aug 13 2019
+ * Date: Fri Sep 13 2019
  *
  * Original work Copyright (C) 2011 - 2013 by Eric Rowell (KineticJS)
  * Modified work Copyright (C) 2014 - present by Anton Lavrenov (Konva)
@@ -11612,7 +11612,7 @@
     },
     _validateAdd: function(child) {
       var type = child.getType();
-      if (type !== 'Group' && type !== 'Shape') {
+      if (type !== 'Group' && type !== 'Shape' && type !== 'AbstractGroup') {
         Konva.Util.throw('You may only add groups and shapes to groups.');
       }
     }

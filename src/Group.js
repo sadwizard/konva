@@ -23,7 +23,7 @@
     },
     _validateAdd: function(child) {
       var type = child.getType();
-      if (type !== 'Group' && type !== 'Shape') {
+      if (type !== 'Group' && type !== 'Shape' && type !== 'AbstractGroup') {
         Konva.Util.throw('You may only add groups and shapes to groups.');
       }
     }
